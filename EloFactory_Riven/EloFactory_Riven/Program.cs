@@ -300,7 +300,7 @@ namespace EloFactory_Riven
             PotionManager();
             KillSteal();
             
-            if (Player.HasBuff("RivenTriCleave"))
+            if (Player.HasBuff("RivenTriCleaveBuff"))
             {
                 if (Utils.GameTimeTickCount - lastCastQ >= 3650)
                 {
