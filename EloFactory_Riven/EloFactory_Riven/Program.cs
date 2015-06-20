@@ -292,13 +292,6 @@ namespace EloFactory_Riven
             if (Player.IsDead) return;
 
             if (Player.GetBuffCount("Recall") == 1) return;
-
-            Orbwalker.SetAttack(CanMove);
-            Orbwalker.SetMovement(CanMove);
-
-            SpellStatus();
-            PotionManager();
-            KillSteal();
             
             if (Config.Item("Riven.KeepQUp").GetValue<bool>())
             {
@@ -309,7 +302,14 @@ namespace EloFactory_Riven
                         Q.Cast(Game.CursorPos);
                     }
                 }
-            }           
+            }            
+
+            Orbwalker.SetAttack(CanMove);
+            Orbwalker.SetMovement(CanMove);
+
+            SpellStatus();
+            PotionManager();
+            KillSteal();
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
