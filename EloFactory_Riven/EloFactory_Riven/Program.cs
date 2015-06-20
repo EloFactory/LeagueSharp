@@ -300,17 +300,16 @@ namespace EloFactory_Riven
             PotionManager();
             KillSteal();
             
-            if (Player.HasBuff("RivenTriCleaveBuff"))
+            if (Config.Item("Riven.KeepQUp").GetValue<bool>())
             {
-                if (Utils.GameTimeTickCount - lastCastQ >= 3650)
+                if (Player.GetBuffCount("RivenTriCleaveBuff") >= 1)
                 {
-                    if (Player.GetBuffCount("Recall") != 1 && !Player.Spellbook.IsChanneling)
+                    if (Utils.GameTimeTickCount - lastCastQ >= 3650)
                     {
-                        if (Config.Item("Riven.KeepQUp").GetValue<bool>())
-                            Q.Cast(Game.CursorPos);
+                        Q.Cast(Game.CursorPos);
                     }
                 }
-            }            
+            }           
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
