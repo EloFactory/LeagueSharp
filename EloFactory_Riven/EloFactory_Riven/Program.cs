@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using System;
 using System.Collections.Generic;
@@ -292,7 +292,7 @@ namespace EloFactory_Riven
             if (Player.IsDead) return;
 
             if (Player.GetBuffCount("Recall") == 1) return;
-            
+
             if (Config.Item("Riven.KeepQUp").GetValue<bool>())
             {
                 if (Player.GetBuffCount("RivenTriCleaveBuff") >= 1)
@@ -302,7 +302,7 @@ namespace EloFactory_Riven
                         Q.Cast(Game.CursorPos);
                     }
                 }
-            }            
+            }
 
             Orbwalker.SetAttack(CanMove);
             Orbwalker.SetMovement(CanMove);
