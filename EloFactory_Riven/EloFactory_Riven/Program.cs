@@ -299,6 +299,18 @@ namespace EloFactory_Riven
             SpellStatus();
             PotionManager();
             KillSteal();
+            
+            if (Player.HasBuff("RivenTriCleave"))
+            {
+                if (Utils.GameTimeTickCount - lastCastQ >= 3650)
+                {
+                    if (Player.GetBuffCount("Recall") != 1 && !Player.Spellbook.IsChanneling)
+                    {
+                        if (Config.Item("Riven.KeepQUp").GetValue<bool>())
+                            Q.Cast(Game.CursorPos);
+                    }
+                }
+            }            
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
