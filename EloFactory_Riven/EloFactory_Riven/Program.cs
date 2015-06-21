@@ -529,7 +529,7 @@ namespace EloFactory_Riven
         #region AntiGapCloser
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            if (Config.Item("Cassiopeia.AutoWEGC").GetValue<bool>() && W.IsReady() && gapcloser.Sender.IsValidTarget(W.Range))
+            if (Config.Item("Riven.AutoWEGC").GetValue<bool>() && W.IsReady() && gapcloser.Sender.IsValidTarget(W.Range))
             {
                 W.Cast(true);
             }
