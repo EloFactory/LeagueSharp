@@ -316,7 +316,7 @@ namespace EloFactory_Riven
                 Combo();
             }
 
-            if (Config.Item("Cassiopeia.AutoWEGC").GetValue<bool>() && W.IsReady())
+            if (Config.Item("Riven.AutoWEGC").GetValue<bool>() && W.IsReady())
             {
                 var targetW = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                 if (targetW.IsValidTarget())
