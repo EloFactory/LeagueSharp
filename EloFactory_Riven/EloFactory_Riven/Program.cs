@@ -1472,12 +1472,9 @@ namespace EloFactory_Riven
                                 }
                                 if (Game.ClockTime >= 1300f)
                                 {
-                                    if (getComboDamageNoUlt(target) > target.Health)
+                                    if (getMiniComboDamage(target) < target.Health)
                                     {
-                                        if (getMiniComboDamage(target) < target.Health)
-                                        {
-                                            R.Cast();
-                                        }
+                                        R.Cast();
                                     }
                                 }
                                 break;
@@ -1485,12 +1482,9 @@ namespace EloFactory_Riven
 
                         case 1:
                             {
-                                if (getComboDamageNoUlt(target) > target.Health)
+                                if (getMiniComboDamage(target) < target.Health)
                                 {
-                                    if (getMiniComboDamage(target) < target.Health)
-                                    {
-                                        R.Cast();
-                                    }
+                                    R.Cast();
                                 }
                                 break;
                             }
