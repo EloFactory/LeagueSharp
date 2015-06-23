@@ -260,7 +260,7 @@ namespace EloFactory_Riven
             Config.SubMenu("Harass").SubMenu("Harass When Enemy Farm").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.ItemsHarassOnEnemyFarm", "Use Items in Harass When Enemy Farm").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("Riven.UseEOnSpell", "Use Deffensive E On Enemy Spell").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("Riven.UseEOnAA", "Use Deffensive E On Enemy AA").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("Riven.MiniHpForHarass", "Minimum Health Percent To Use Harass")).SetValue(new Slider(25, 0, 100));
+            Config.SubMenu("Harass").AddItem(new MenuItem("Riven.MiniHpForHarass", "Minimum Health Percent To Use Harass")).SetValue(new Slider(40, 0, 100));
             Config.SubMenu("Harass").AddItem(new MenuItem("Riven.HarassActive", "Harass!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
