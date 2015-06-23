@@ -140,8 +140,8 @@ namespace EloFactory_Cassiopeia
             Config.SubMenu("Combo").SubMenu("Assisted R").AddItem(new MenuItem("Cassiopeia.AssistedREnemiesCount", "Minimum Enemies Hit To Assisted R").SetValue(new Slider(4, 1, 5)));
             Config.SubMenu("Combo").AddSubMenu(new Menu("Items Activator", "Items Activator"));
             Config.SubMenu("Combo").SubMenu("Items Activator").AddSubMenu(new Menu("Use Seraph's Embrace", "Use Seraph's Embrace"));
-            Config.SubMenu("Combo").SubMenu("Items Activator").SubMenu("Use Seraph's Embrace").AddItem(new MenuItem("Cassiopeia.AutoSeraphsEmbrace", "Use Seraph's Embrace").SetValue(true));
-            Config.SubMenu("Combo").SubMenu("Items Activator").SubMenu("Use Seraph's Embrace").AddItem(new MenuItem("Cassiopeia.AutoSeraphsEmbraceMiniHP", "Minimum Health Percent To Use Seraph's Embrace").SetValue(new Slider(30, 0, 100)));
+            Config.SubMenu("Combo").SubMenu("Items Activator").SubMenu("Use Seraph's Embrace").AddItem(new MenuItem("Cassiopeia.AutoSeraphsEmbrace", "Auto Seraph Usage").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("Items Activator").SubMenu("Use Seraph's Embrace").AddItem(new MenuItem("Cassiopeia.AutoSeraphsEmbraceMiniHP", "Minimum Health Percent To Use Auto Seraph").SetValue(new Slider(30, 0, 100)));
             Config.SubMenu("Combo").SubMenu("Items Activator").AddSubMenu(new Menu("Use Zhonya's Hourglass", "Use Zhonya's Hourglass"));
             Config.SubMenu("Combo").SubMenu("Items Activator").SubMenu("Use Zhonya's Hourglass").AddItem(new MenuItem("Cassiopeia.useZhonyasHourglass", "Use Zhonya's Hourglass").SetValue(true));
             Config.SubMenu("Combo").SubMenu("Items Activator").SubMenu("Use Zhonya's Hourglass").AddItem(new MenuItem("Cassiopeia.MinimumHPtoZhonyasHourglass", "Minimum Health Percent To Use Zhonya's Hourglass").SetValue(new Slider(30, 0, 100)));
@@ -247,10 +247,7 @@ namespace EloFactory_Cassiopeia
         public static void Game_OnGameUpdate(EventArgs args)
         {
 
-            if (Config.Item("Cassiopeia.SkinChanger").GetValue<bool>())
-            {
-                Player.SetSkin(Player.BaseSkinName, Config.Item("Cassiopeia.SkinChangerName").GetValue<StringList>().SelectedIndex);
-            }            
+            Player.SetSkin(Player.BaseSkinName, Config.Item("Cassiopeia.SkinChanger").GetValue<bool>() ? Config.Item("Cassiopeia.SkinChangerName").GetValue<StringList>().SelectedIndex : Player.BaseSkinId);
 
             if (Config.Item("Cassiopeia.AutoLevelSpell").GetValue<bool>()) LevelUpSpells();
 
@@ -1030,7 +1027,7 @@ namespace EloFactory_Cassiopeia
             foreach (var target in ObjectManager.Get<Obj_AI_Hero>().Where(target => !target.IsMe && target.Team != ObjectManager.Player.Team))
             {
 
-                if (!target.HasBuff("SionPassiveZombie") && !target.HasBuffOfType(BuffType.Invulnerability) && !target.HasBuffOfType(BuffType.SpellImmunity))
+                if (!target.HasBuff("SionPassiveZombie") && !target.HasBuff("Udying Rage") && !target.HasBuff("JudicatorIntervention"))
                 {
 
                     if (UseEPKS && E.IsReady() && Player.Mana >= EMANA && target.Health < E.GetDamage(target) && Player.Distance(target) <= E.Range && !target.IsDead && target.IsValidTarget() && IsPoisoned(target))
@@ -2205,6 +2202,8 @@ namespace EloFactory_Cassiopeia
         {
             var target = TargetSelector.GetTarget(500, TargetSelector.DamageType.Magical);
 
+            if (target.HasBuff("Black Shield") || target.HasBuff("Spell Shield") || target.HasBuff("BansheesVeil")) return;
+
             if (Player.CountEnemiesInRange(1300) > 1)
             {
                 if (target.IsFacing(Player))
@@ -2212,8 +2211,6 @@ namespace EloFactory_Cassiopeia
                     List<Obj_AI_Hero> targets = HeroManager.Enemies.Where(o => R.WillHit(o, target.Position) && o.Distance(Player.Position) < 500).ToList<Obj_AI_Hero>();
                     if (getMiniComboDamage(target) < target.Health)
                     {
-
-
                         if (targets.Count > 1)
                         {
                             R.Cast(target.Position, true);
@@ -2342,7 +2339,7 @@ namespace EloFactory_Cassiopeia
         #region Assisted R
         public static void AssistedR()
         {
-            var RList = HeroManager.Enemies.Where(x => x.IsValidTarget(500) && Prediction.GetPrediction(x, R.Delay).UnitPosition.Distance(Player.Position) < 500).ToList();
+            var RList = HeroManager.Enemies.Where(x => x.IsValidTarget(500) && Prediction.GetPrediction(x, R.Delay).UnitPosition.Distance(Player.Position) < 500 && !x.HasBuff("Black Shield") && !x.HasBuff("Spell Shield") && !x.HasBuff("BansheesVeil")).ToList();
             if (R.IsReady() && Player.Mana >= RMANA && RList.Any())
             {
                 Obj_AI_Hero RPos = RList.FirstOrDefault();
@@ -2360,6 +2357,7 @@ namespace EloFactory_Cassiopeia
         }
         #endregion
 
+        #region TowerRange
         public static bool CanEscapeWithFlash(Vector2 pos)
         {
             foreach (Obj_AI_Turret turret in ObjectManager.Get<Obj_AI_Turret>().Where(turret => turret.IsEnemy && turret.Health > 0))
@@ -2369,7 +2367,7 @@ namespace EloFactory_Cassiopeia
             }
             return false;
         }
-
+        #endregion
     }
 
 
