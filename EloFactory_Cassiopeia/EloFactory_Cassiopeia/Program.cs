@@ -133,6 +133,7 @@ namespace EloFactory_Cassiopeia
             Config.SubMenu("Combo").SubMenu("KS Mode").AddItem(new MenuItem("Cassiopeia.UseEPKS", "KS With E On Poisoned").SetValue(true));
             Config.SubMenu("Combo").AddSubMenu(new Menu("Assisted R", "Assisted R"));
             Config.SubMenu("Combo").SubMenu("Assisted R").AddItem(new MenuItem("Cassiopeia.AssistedRKey", "Assisted R Key !").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Press)));
+            Config.SubMenu("Combo").SubMenu("Assisted R").AddItem(new MenuItem("Cassiopeia.AssistedRActiveT", "Assisted R (toggle)!").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)));
             Config.SubMenu("Combo").SubMenu("Assisted R").AddItem(new MenuItem("Cassiopeia.MoveOnCursorWhenAssistedRKey", "Move On Cursor When Assisted Key Press").SetValue(true));
             Config.SubMenu("Combo").SubMenu("Assisted R").AddItem(new MenuItem("Cassiopeia.AssistedRFacing", "Assisted R If X Enemies Facing").SetValue(true));
             Config.SubMenu("Combo").SubMenu("Assisted R").AddItem(new MenuItem("Cassiopeia.AssistedRFacingCount", "Minimum Enemies Facing To Assisted R").SetValue(new Slider(1, 1, 5)));
@@ -278,7 +279,7 @@ namespace EloFactory_Cassiopeia
             #endregion
 
             #region Assisted R Key
-            if (Config.Item("Cassiopeia.AssistedRKey").GetValue<KeyBind>().Active)
+            if (Config.Item("Cassiopeia.AssistedRKey").GetValue<KeyBind>().Active || Config.Item("Cassiopeia.AssistedRActiveT").GetValue<KeyBind>().Active)
             {
                 if (Config.Item("Cassiopeia.MoveOnCursorWhenAssistedRKey").GetValue<bool>())
                 {
@@ -2369,6 +2370,4 @@ namespace EloFactory_Cassiopeia
         }
         #endregion
     }
-
-
 }
