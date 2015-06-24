@@ -106,26 +106,6 @@ namespace EloFactory_Riven
             else return 1200;
         }
 
-        public static float HarassRange()
-        {
-            float range = 0f;
-
-            if (Q.IsReady())
-            {
-                range += Q.Range;
-            }
-            if (E.IsReady())
-            {
-                range += E.Range;
-            }
-            if (W.IsReady())
-            {
-                range += W.Range;
-            }
-            range += Player.AttackRange;
-            return range;
-        }
-
         public static float LaneClearQRange()
         {
             if (Q.IsReady() && Config.Item("Riven.UseQLaneClear").GetValue<bool>() && Player.GetBuffCount("RivenTriCleaveBuff") != 2)
@@ -227,6 +207,19 @@ namespace EloFactory_Riven
             Config.SubMenu("Combo").SubMenu("Q In Combo").SubMenu("Q Advanced Settings").AddItem(new MenuItem("Riven.GapCloserDelay", "Gapclose Q Delay (ms)")).SetValue(new Slider(0, 0, 200));
             Config.SubMenu("Combo").AddSubMenu(new Menu("W In Combo", "W In Combo"));
             Config.SubMenu("Combo").SubMenu("W In Combo").AddItem(new MenuItem("Riven.UseWCombo", "Use W In Combo").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("W In Combo").AddSubMenu(new Menu("Auto W Settings", "Auto W Settings"));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").AddSubMenu(new Menu("AutoW Settings Early Game", "AutoW Settings Early Game"));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Settings Early Game").AddItem(new MenuItem("Riven.AutoWEarly", "Auto W Early Game").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Settings Early Game").AddItem(new MenuItem("Riven.AutoWCountEarly", "Minimum Enemy Hit To Auto W Early Game").SetValue(new Slider(1, 1, 5)));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Settings Early Game").AddItem(new MenuItem("Riven.AutoWHPEarly", "Minimum Hp Percent To Auto W Early Game").SetValue(new Slider(0, 0, 100)));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").AddSubMenu(new Menu("AutoW Settings Late Game", "AutoW Settings Late Game"));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Settings Late Game").AddItem(new MenuItem("Riven.AutoWLate", "Auto W Late Game").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Settings Late Game").AddItem(new MenuItem("Riven.AutoWCountLate", "Minimum Enemy Hit To Auto W Late Game").SetValue(new Slider(3, 1, 5)));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Settings Late Game").AddItem(new MenuItem("Riven.AutoWHPLate", "Minimum Hp Percent To Auto W Late Game").SetValue(new Slider(0, 0, 100)));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").AddSubMenu(new Menu("AutoW Deffensive Settings", "AutoW Deffensive Settings"));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Deffensive Settings").AddItem(new MenuItem("Riven.AutoWDeffensive", "Auto Deffensive W").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Deffensive Settings").AddItem(new MenuItem("Riven.AutoWCountDeffensive", "Minimum Enemy Hit To Auto Deffensive W").SetValue(new Slider(1, 1, 5)));
+            Config.SubMenu("Combo").SubMenu("W In Combo").SubMenu("Auto W Settings").SubMenu("AutoW Deffensive Settings").AddItem(new MenuItem("Riven.AutoWHPDeffensive", "Minimum Hp Percent To Auto Deffensive W").SetValue(new Slider(30, 0, 100)));
             Config.SubMenu("Combo").AddSubMenu(new Menu("E In Combo", "E In Combo"));
             Config.SubMenu("Combo").SubMenu("E In Combo").AddItem(new MenuItem("Riven.UseECombo", "Use E In Combo").SetValue(true));
             Config.SubMenu("Combo").SubMenu("E In Combo").AddSubMenu(new Menu("E Advanced Settings", "E Advanced Settings"));
@@ -260,8 +253,17 @@ namespace EloFactory_Riven
             Config.SubMenu("Harass").SubMenu("Harass When Enemy Farm").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.ItemsHarassOnEnemyFarm", "Use Items in Harass When Enemy Farm").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("Riven.UseEOnSpell", "Use Deffensive E On Enemy Spell").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("Riven.UseEOnAA", "Use Deffensive E On Enemy AA").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("Riven.MiniHpForHarass", "Minimum Health Percent To Use Harass")).SetValue(new Slider(40, 0, 100));
+            Config.SubMenu("Harass").AddItem(new MenuItem("Riven.MiniHpForHarass", "Minimum Health Percent To Use Harass")).SetValue(new Slider(25, 0, 100));
             Config.SubMenu("Harass").AddItem(new MenuItem("Riven.HarassActive", "Harass!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
+
+            Config.AddSubMenu(new Menu("Flee", "Flee"));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseQFleeMode", "Use Q In Flee Mode").SetValue(true));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseWFleeMode", "Use W In Flee Mode").SetValue(true));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseWFleeModeCount", "Minimum Enemy Around To Use W In Flee Mode")).SetValue(new Slider(1, 1, 5));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseEFleeMode", "Use E In Flee Mode").SetValue(true));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.FleeMode", "Flee Mode E Priority").SetValue(new StringList(new[] { "E 1st", "E After 1st Q", "E After 2nd Q", "E After 3rd Q" }, 2)));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseYoumuuFleeMode", "Use Youmuu In Flee Mode").SetValue(false));
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseYoumuuFleeModeEnemyCount", "Minimum Enemy Around To Use Youmuu's Ghostblade In Flee Mode")).SetValue(new Slider(1, 0, 5));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseQLaneClear", "Use Q in LaneClear").SetValue(true));
@@ -353,18 +355,67 @@ namespace EloFactory_Riven
             PotionManager();
             KillSteal();
 
+            if (W.IsReady())
+            {
+
+                if (Config.Item("Riven.AutoWDeffensive").GetValue<bool>())
+                {
+                    if (Player.CountEnemiesInRange(W.Range) >= Config.Item("Riven.AutoWCountDeffensive").GetValue<Slider>().Value && Player.HealthPercent <= Config.Item("Riven.AutoWHPDeffensive").GetValue<Slider>().Value)
+                    {
+                        var target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+                        if (Player.CountEnemiesInRange(W.Range) == 1 && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                        {
+                            W.Cast(true);
+                        }
+                        else
+                            W.Cast(true);
+                    }
+                }
+
+                if (Game.ClockTime < 1300f && Config.Item("Riven.AutoWEarly").GetValue<bool>())
+                {
+                    if (Player.CountEnemiesInRange(W.Range) >= Config.Item("Riven.AutoWCountEarly").GetValue<Slider>().Value && Player.HealthPercent <= Config.Item("Riven.AutoWHPEarly").GetValue<Slider>().Value)
+                    {
+                        var target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+                        if (Player.CountEnemiesInRange(W.Range) == 1 && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                        {
+                            W.Cast(true);
+                        }
+                        else
+                            W.Cast(true);
+                    }
+                }
+
+                if (Game.ClockTime >= 1300f && Config.Item("Riven.AutoWLate").GetValue<bool>())
+                {
+                    if (Player.CountEnemiesInRange(W.Range) >= Config.Item("Riven.AutoWCountLate").GetValue<Slider>().Value && Player.HealthPercent <= Config.Item("Riven.AutoWHPLate").GetValue<Slider>().Value)
+                    {
+                        var target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+                        if (Player.CountEnemiesInRange(W.Range) == 1 && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                        {
+                            W.Cast(true);
+                        }
+                        else
+                            W.Cast(true);
+                    }
+                }
+
+            }
+
+            if (Config.Item("Riven.FleeActive").GetValue<KeyBind>().Active)
+            {
+                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                FleeLogic();
+            }
+
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 Combo();
             }
 
-            if (Config.Item("Riven.AutoWEGC").GetValue<bool>() && W.IsReady())
+            if (Config.Item("Riven.HarassActive").GetValue<KeyBind>().Active)
             {
-                var targetW = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                if (targetW.IsValidTarget())
-                {
-                    W.Cast(true);
-                }
+                Harass();
             }
 
         }
@@ -375,6 +426,7 @@ namespace EloFactory_Riven
         {
             var targetCancel = TargetSelector.GetTarget(500, TargetSelector.DamageType.Physical);
             var target = TargetSelector.GetTarget(ComboRange(), TargetSelector.DamageType.Physical);
+            
 
             #region Interrupt
             double ShouldUseOn = ShouldUse(args.SData.Name);
@@ -417,7 +469,10 @@ namespace EloFactory_Riven
 
                     if (Player.Distance(unit) <= W.Range)
                     {
-                        W.Cast(true);
+                        if (!target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                        {
+                            W.Cast(true);
+                        }
                         if (Config.Item("Riven.LockMovementInterrupt").GetValue<bool>())
                         {
                             Player.IssueOrder(GameObjectOrder.MoveTo, unit.ServerPosition);
@@ -459,31 +514,12 @@ namespace EloFactory_Riven
                 {
                     if (args.Target.IsMe)
                     {
-
-                        if (Config.Item("Riven.HarassOnInitiate").GetValue<bool>() && (Player.Distance(target) < HarassRange() && Player.HealthPercent > Config.Item("Riven.MiniHpForHarass").GetValue<Slider>().Value))
+                        if (Config.Item("Riven.HarassOnInitiate").GetValue<bool>() && (Player.Distance(unit) < E.Range + W.Range && Player.HealthPercent > Config.Item("Riven.MiniHpForHarass").GetValue<Slider>().Value))
                         {
 
-                            if (CanUseAA && CanMove)
+                            if (E.IsReady() && CanCastE && Config.Item("Riven.EHarassOnInitiate").GetValue<bool>() && Player.Distance(unit) > Player.AttackRange)
                             {
-                                if (!(CastedQ || CastedW || CastedE || UsedAA))
-                                {
-                                    if (target.Distance(Player.ServerPosition) <= Player.AttackRange + Player.Distance(Player.BBox.Minimum) + 50)
-                                    {
-                                        CanCastQ = false;
-                                        Player.IssueOrder(GameObjectOrder.AttackUnit, target);
-                                    }
-                                }
-                            }
-
-                            if (Config.Item("Riven.ItemsHarassOnInitiate").GetValue<bool>())
-                            {
-                                AutoItemsActivator();
-                            }
-
-
-                            if (E.IsReady() && CanCastE && Config.Item("Riven.EHarassOnInitiate").GetValue<bool>() && Player.Distance(target) > Player.AttackRange)
-                            {
-                                E.Cast(target.ServerPosition);
+                                E.Cast(unit.ServerPosition);
                                 if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
                                 {
                                     RLogic();
@@ -493,157 +529,34 @@ namespace EloFactory_Riven
                                     ItemsActivator();
                                 }
                             }
-
-                            if (W.IsReady() && CanCastW && Config.Item("Riven.WHarassOnInitiate").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range)
-                            {
-                                if (!target.HasBuff("BansheesVeil"))
-                                {
-                                    if (Config.Item("Riven.ItemsHarassOnInitiate").GetValue<bool>())
-                                    {
-                                        ItemsActivator();
-                                    }
-                                    W.Cast();
-                                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
-                                    {
-                                        RLogic();
-                                    }
-                                }
-                            }
-
-                            if (Q.IsReady() && target.Distance(Player.ServerPosition) <= Q.Range && Config.Item("Riven.QHarassOnInitiate").GetValue<bool>())
-                            {
-
-                                if (CanCastQ)
-                                {
-                                    if (Config.Item("Riven.ItemsHarassOnInitiate").GetValue<bool>())
-                                    {
-                                        ItemsActivator();
-                                    }
-                                    Q.Cast(target.ServerPosition);
-                                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
-                                    {
-                                        RLogic();
-                                    }
-                                }
-                            }
-
-                            if (target.Distance(Player.ServerPosition) > Q.Range && Config.Item("Riven.QHarassOnInitiate").GetValue<bool>())
-                            {
-                                if ((!E.IsReady() || Config.Item("Riven.EHarassOnInitiate").GetValue<bool>()) && !UsedAA)
-                                {
-                                    if (Q.IsReady() && Utils.GameTimeTickCount - lastCastE >= 700)
-                                    {
-                                        if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
-                                        {
-                                            RLogic();
-                                        }
-
-                                        QGapCloseLogic();
-                                    }
-                                }
-                            }
+                        }
+                        else if (Config.Item("Riven.UseEOnAA").GetValue<bool>() && args.SData.IsAutoAttack())
+                        {
+                            E.Cast(EscapeEEndPos);
                         }
 
-                        else
-
-                            if (Config.Item("Riven.UseEOnAA").GetValue<bool>() && args.SData.IsAutoAttack())
-                            {
-                                E.Cast(EscapeEEndPos);
-                            }
-
-                            if (Config.Item("Riven.UseEOnSpell").GetValue<bool>() && !args.SData.IsAutoAttack())
-                            {
-                                E.Cast(EscapeEEndPos);
-                            }
-                    }             
-                    else
-
-                        if (Config.Item("Riven.HarassOnEnemyFarm").GetValue<bool>() && (Player.Distance(target) < HarassRange() && Player.HealthPercent > Config.Item("Riven.MiniHpForHarass").GetValue<Slider>().Value))
+                        if (Config.Item("Riven.UseEOnSpell").GetValue<bool>() && !args.SData.IsAutoAttack())
                         {
+                            E.Cast(EscapeEEndPos);
+                        }
 
-                            if (CanUseAA && CanMove)
+                    }
+                    else if (Config.Item("Riven.HarassOnEnemyFarm").GetValue<bool>() && (Player.Distance(unit) < E.Range + W.Range && Player.HealthPercent > Config.Item("Riven.MiniHpForHarass").GetValue<Slider>().Value))
+                    {
+
+                        if (E.IsReady() && CanCastE && Config.Item("Riven.EHarassOnEnemyFarm").GetValue<bool>() && Player.Distance(unit) > Player.AttackRange)
+                        {
+                            E.Cast(unit.ServerPosition);
+                            if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
                             {
-                                if (!(CastedQ || CastedW || CastedE || UsedAA))
-                                {
-                                    if (target.Distance(Player.ServerPosition) <= Player.AttackRange + Player.Distance(Player.BBox.Minimum) + 50)
-                                    {
-                                        CanCastQ = false;
-                                        Player.IssueOrder(GameObjectOrder.AttackUnit, target);
-                                    }
-                                }
+                                RLogic();
                             }
-
                             if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
                             {
-                                AutoItemsActivator();
-                            }
-
-
-                            if (E.IsReady() && CanCastE && Config.Item("Riven.EHarassOnEnemyFarm").GetValue<bool>() && Player.Distance(target) > Player.AttackRange)
-                            {
-                                E.Cast(target.ServerPosition);
-                                if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
-                                {
-                                    RLogic();
-                                }
-                                if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
-                                {
-                                    ItemsActivator();
-                                }
-                            }
-
-                            if (W.IsReady() && CanCastW && Config.Item("Riven.WHarassOnEnemyFarm").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range)
-                            {
-                                if (!target.HasBuff("BansheesVeil"))
-                                {
-                                    if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
-                                    {
-                                        ItemsActivator();
-                                    }
-                                    W.Cast();
-                                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
-                                    {
-                                        RLogic();
-                                    }
-                                }
-                            }
-
-                            if (Q.IsReady() && target.Distance(Player.ServerPosition) <= Q.Range && Config.Item("Riven.QHarassOnEnemyFarm").GetValue<bool>())
-                            {
-
-                                if (CanCastQ)
-                                {
-                                    if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
-                                    {
-                                        ItemsActivator();
-                                    }
-                                    Q.Cast(target.ServerPosition);
-                                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
-                                    {
-                                        RLogic();
-                                    }
-                                }
-                            }
-
-                            if (target.Distance(Player.ServerPosition) > Q.Range && Config.Item("Riven.QHarassOnEnemyFarm").GetValue<bool>())
-                            {
-                                if ((!E.IsReady() || Config.Item("Riven.EHarassOnEnemyFarm").GetValue<bool>()) && !UsedAA)
-                                {
-                                    if (Q.IsReady() && Utils.GameTimeTickCount - lastCastE >= 700)
-                                    {
-                                        if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
-                                        {
-                                            RLogic();
-                                        }
-
-                                        QGapCloseLogic();
-                                    }
-                                }
+                                ItemsActivator();
                             }
                         }
-
-                       
-                    
+                    }
                 }
             }
             #endregion
@@ -775,7 +688,10 @@ namespace EloFactory_Riven
         {
             if (Config.Item("Riven.AutoWEGC").GetValue<bool>() && W.IsReady() && gapcloser.Sender.IsValidTarget(W.Range))
             {
-                W.Cast(true);
+                if (!gapcloser.Sender.HasBuff("Black Shield") && !gapcloser.Sender.HasBuff("Spell Shield") && !gapcloser.Sender.HasBuff("BansheesVeil"))
+                {
+                    W.Cast(true);
+                }
             }
         }
         #endregion
@@ -845,10 +761,10 @@ namespace EloFactory_Riven
 
             if (W.IsReady() && CanCastW && Config.Item("Riven.UseWCombo").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range + 25)
             {
-                if (Config.Item("Riven.UseWCombo").GetValue<bool>() && !target.HasBuff("BansheesVeil"))
+                if (Config.Item("Riven.UseWCombo").GetValue<bool>() && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
                 {
                     ItemsActivator();
-                    W.Cast();
+                    W.Cast(true);
                     if (R.IsReady() && !Player.HasBuff("RivenWindScarReady"))
                     {
                         RLogic();
@@ -884,6 +800,159 @@ namespace EloFactory_Riven
                             }
 
                             QGapCloseLogic();
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Harass
+        private static void Harass()
+        {
+            var targetHarass = TargetSelector.GetTarget(Q.Range + Player.AttackRange, TargetSelector.DamageType.Physical);
+            if (Config.Item("Riven.HarassActive").GetValue<KeyBind>().Active)
+            {
+
+                if (Player.CountEnemiesInRange(1300) == 1)
+                {
+                    if (Config.Item("Riven.HarassOnInitiate").GetValue<bool>() && (Player.Distance(targetHarass) < Q.Range + Player.AttackRange && Player.HealthPercent > Config.Item("Riven.MiniHpForHarass").GetValue<Slider>().Value))
+                    {
+
+                        if (CanUseAA && CanMove)
+                        {
+                            if (!(CastedQ || CastedW || CastedE || UsedAA))
+                            {
+                                if (targetHarass.Distance(Player.ServerPosition) <= Player.AttackRange + Player.Distance(Player.BBox.Minimum) + 50)
+                                {
+                                    CanCastQ = false;
+                                    Player.IssueOrder(GameObjectOrder.AttackUnit, targetHarass);
+                                }
+                            }
+                        }
+
+                        if (Config.Item("Riven.ItemsHarassOnInitiate").GetValue<bool>())
+                        {
+                            AutoItemsActivator();
+                        }
+
+                        if (W.IsReady() && CanCastW && Config.Item("Riven.WHarassOnInitiate").GetValue<bool>() && targetHarass.Distance(Player.ServerPosition) <= W.Range)
+                        {
+                            if (!targetHarass.HasBuff("Black Shield") && !targetHarass.HasBuff("Spell Shield") && !targetHarass.HasBuff("BansheesVeil"))
+                            {
+                                if (Config.Item("Riven.ItemsHarassOnInitiate").GetValue<bool>())
+                                {
+                                    ItemsActivator();
+                                }
+                                W.Cast(true);
+                                if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
+                                {
+                                    RLogic();
+                                }
+                            }
+                        }
+
+                        if (Q.IsReady() && targetHarass.Distance(Player.ServerPosition) <= Q.Range && Config.Item("Riven.QHarassOnInitiate").GetValue<bool>())
+                        {
+
+                            if (CanCastQ)
+                            {
+                                if (Config.Item("Riven.ItemsHarassOnInitiate").GetValue<bool>())
+                                {
+                                    ItemsActivator();
+                                }
+                                Q.Cast(targetHarass.ServerPosition);
+                                if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
+                                {
+                                    RLogic();
+                                }
+                            }
+                        }
+
+                        if (targetHarass.Distance(Player.ServerPosition) > Q.Range && Config.Item("Riven.QHarassOnInitiate").GetValue<bool>())
+                        {
+                            if (!UsedAA)
+                            {
+                                if (Q.IsReady() && Utils.GameTimeTickCount - lastCastE >= 700)
+                                {
+                                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnInitiate").GetValue<bool>())
+                                    {
+                                        RLogic();
+                                    }
+
+                                    QGapCloseLogic();
+                                }
+                            }
+                        }
+                    }
+
+                    else if (Config.Item("Riven.HarassOnEnemyFarm").GetValue<bool>() && (Player.Distance(targetHarass) < Q.Range + Player.AttackRange && Player.HealthPercent > Config.Item("Riven.MiniHpForHarass").GetValue<Slider>().Value))
+                    {
+
+                        if (CanUseAA && CanMove)
+                        {
+                            if (!(CastedQ || CastedW || CastedE || UsedAA))
+                            {
+                                if (targetHarass.Distance(Player.ServerPosition) <= Player.AttackRange + Player.Distance(Player.BBox.Minimum) + 50)
+                                {
+                                    CanCastQ = false;
+                                    Player.IssueOrder(GameObjectOrder.AttackUnit, targetHarass);
+                                }
+                            }
+                        }
+
+                        if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
+                        {
+                            AutoItemsActivator();
+                        }
+
+                        if (W.IsReady() && CanCastW && Config.Item("Riven.WHarassOnEnemyFarm").GetValue<bool>() && targetHarass.Distance(Player.ServerPosition) <= W.Range)
+                        {
+                            if (!targetHarass.HasBuff("Black Shield") && !targetHarass.HasBuff("Spell Shield") && !targetHarass.HasBuff("BansheesVeil"))
+                            {
+                                if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
+                                {
+                                    ItemsActivator();
+                                }
+                                W.Cast(true);
+                                if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
+                                {
+                                    RLogic();
+                                }
+                            }
+                        }
+
+                        if (Q.IsReady() && targetHarass.Distance(Player.ServerPosition) <= Q.Range && Config.Item("Riven.QHarassOnEnemyFarm").GetValue<bool>())
+                        {
+
+                            if (CanCastQ)
+                            {
+                                if (Config.Item("Riven.ItemsHarassOnEnemyFarm").GetValue<bool>())
+                                {
+                                    ItemsActivator();
+                                }
+                                Q.Cast(targetHarass.ServerPosition);
+                                if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
+                                {
+                                    RLogic();
+                                }
+                            }
+                        }
+
+                        if (targetHarass.Distance(Player.ServerPosition) > Q.Range && Config.Item("Riven.QHarassOnEnemyFarm").GetValue<bool>())
+                        {
+                            if (!UsedAA)
+                            {
+                                if (Q.IsReady() && Utils.GameTimeTickCount - lastCastE >= 700)
+                                {
+                                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady") && Config.Item("Riven.RHarassOnEnemyFarm").GetValue<bool>())
+                                    {
+                                        RLogic();
+                                    }
+
+                                    QGapCloseLogic();
+                                }
+                            }
                         }
                     }
                 }
@@ -1727,6 +1796,78 @@ namespace EloFactory_Riven
 
                 }
             }
+        }
+        #endregion
+
+        #region FleeLogic
+        public static void FleeLogic()
+        {
+            
+            if (Config.Item("Riven.UseWFleeMode").GetValue<bool>())
+            {
+                if (Player.CountEnemiesInRange(W.Range) >= Config.Item("Riven.UseWFleeModeCount").GetValue<Slider>().Value)
+                {
+                    var target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+                    if (Player.CountEnemiesInRange(W.Range) == 1 && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                    {
+                        W.Cast(true);
+                    }
+                    else
+                        W.Cast(true);
+                }
+            }
+
+            if (Config.Item("Riven.UseYoumuuFleeMode").GetValue<bool>() && Player.CountEnemiesInRange(1300) >= Config.Item("Riven.UseYoumuuFleeModeEnemyCount").GetValue<Slider>().Value)
+            {
+                if (YoumuusGhostblade.IsReady())
+                {
+                    YoumuusGhostblade.Cast();
+                }
+            }
+
+            if (Config.Item("Riven.UseEFleeMode").GetValue<bool>())
+            {
+                if (Config.Item("Riven.UseQFleeMode").GetValue<bool>() && Q.IsReady())
+                {
+
+                    switch (Config.Item("Riven.FleeMode").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                E.Cast(Game.CursorPos, true);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                if (Player.GetBuffCount("RivenTriCleaveBuff") == 1)
+                                {
+                                    E.Cast(Game.CursorPos, true);
+                                }
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                if (Player.GetBuffCount("RivenTriCleaveBuff") == 2)
+                                {
+                                    E.Cast(Game.CursorPos, true);
+                                }
+                                break;
+                            }
+                    }
+
+                }
+                else
+                    E.Cast(Game.CursorPos, true);
+            }
+
+            if (Config.Item("Riven.UseQFleeMode").GetValue<bool>())
+            {
+                    Q.Cast(Game.CursorPos, true);
+            }
+
+
         }
         #endregion
 
