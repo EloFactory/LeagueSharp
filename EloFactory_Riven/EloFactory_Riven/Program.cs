@@ -1877,7 +1877,7 @@ namespace EloFactory_Riven
         {
             var target = TargetSelector.GetTarget(1200, TargetSelector.DamageType.Physical);
 
-            if (Config.Item("Riven.R2Mode").GetValue<StringList>().SelectedIndex == 1 && target.IsValidTarget(R.Range) && Player.HasBuff("RivenWindScarReady") && !target.HasBuff("BansheesVeil"))
+            if (Config.Item("Riven.R2Mode").GetValue<StringList>().SelectedIndex == 1 && target.IsValidTarget(R.Range) && Player.HasBuff("RivenWindScarReady") && !target.HasBuff("SionPassiveZombie") && !target.HasBuff("Udying Rage") && !target.HasBuff("JudicatorIntervention") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
             {
                 R.CastIfWillHit(target, Config.Item("Riven.MiniCountR2").GetValue<Slider>().Value);
 
@@ -1906,7 +1906,7 @@ namespace EloFactory_Riven
 
             foreach (var targets in ObjectManager.Get<Obj_AI_Hero>().Where(t => !t.IsMe && t.Team != ObjectManager.Player.Team))
             {
-                if (!target.HasBuff("SionPassiveZombie") && !target.HasBuffOfType(BuffType.Invulnerability))
+                if (!target.HasBuff("SionPassiveZombie") && !target.HasBuff("Udying Rage") && !target.HasBuff("JudicatorIntervention"))
                 {
                     if (useIgniteKS && Ignite.Slot != SpellSlot.Unknown && target.Health < Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) && Player.Distance(target) <= Ignite.Range && !target.IsDead && target.IsValidTarget())
                     {
@@ -1914,7 +1914,7 @@ namespace EloFactory_Riven
                         return;
                     }
 
-                    if (Player.HasBuff("RivenWindScarReady") && R.GetDamage(targets) > targets.Health && targets.Distance(Player) < R.Range && !target.HasBuff("BansheesVeil"))
+                    if (Player.HasBuff("RivenWindScarReady") && R.GetDamage(targets) > targets.Health && targets.Distance(Player) < R.Range && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
                     {
                         R.CastIfHitchanceEquals(targets, HitChance.VeryHigh, true);
                     }
