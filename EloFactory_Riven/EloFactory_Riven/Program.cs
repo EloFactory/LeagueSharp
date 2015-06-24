@@ -264,7 +264,8 @@ namespace EloFactory_Riven
             Config.SubMenu("Flee").AddItem(new MenuItem("Riven.FleeMode", "Flee Mode E Priority").SetValue(new StringList(new[] { "E 1st", "E After 1st Q", "E After 2nd Q" }, 2)));
             Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseYoumuuFleeMode", "Use Youmuu In Flee Mode").SetValue(false));
             Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseYoumuuFleeModeEnemyCount", "Minimum Enemy Around To Use Youmuu's Ghostblade In Flee Mode")).SetValue(new Slider(1, 0, 5));
-
+            Config.SubMenu("Flee").AddItem(new MenuItem("Riven.FleeActive", "Flee!").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Press)));
+            
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseQLaneClear", "Use Q in LaneClear").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.QLaneClearCount", "Minimum Minion To Use Q In LaneClear").SetValue(new Slider(3, 1, 6)));
