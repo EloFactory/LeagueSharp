@@ -49,6 +49,7 @@ namespace EloFactory_Riven
         private static int lastCastW;
         private static int lastCastE;
         private static int lastCastAA;
+        private static int lastCastFlashCombo;
 
         private static bool CanCastQ;
         private static bool CanCastW;
@@ -372,6 +373,12 @@ namespace EloFactory_Riven
                 }
             }
 
+            if (Config.Item("Riven.FleeActive").GetValue<KeyBind>().Active)
+            {
+                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                FleeLogic();
+            }
+
             Orbwalker.SetAttack(CanMove);
             Orbwalker.SetMovement(CanMove);
 
@@ -424,12 +431,6 @@ namespace EloFactory_Riven
                     }
                 }
 
-            }
-
-            if (Config.Item("Riven.FleeActive").GetValue<KeyBind>().Active)
-            {
-                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
-                FleeLogic();
             }
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
@@ -765,7 +766,7 @@ namespace EloFactory_Riven
                 }
             }
 
-            if (W.IsReady() && CanCastW && Config.Item("Riven.UseWCombo").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range + 25)
+            if (W.IsReady() && (CanCastW  || Utils.GameTimeTickCount - lastCastFlashCombo < 1000) && Config.Item("Riven.UseWCombo").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range + 25)
             {
                 if (Config.Item("Riven.UseWCombo").GetValue<bool>() && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
                 {
@@ -1890,7 +1891,7 @@ namespace EloFactory_Riven
                 if (Q.IsReady())
                 {
                     damage += Q.GetDamage(target);
-                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target)) * 1.5f;
+                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target));
                 }
             }
             if (Config.Item("Riven.UseWCombo").GetValue<bool>())
@@ -1898,7 +1899,7 @@ namespace EloFactory_Riven
                 if (W.IsReady())
                 {
                     damage += W.GetDamage(target);
-                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target)) * 1.5f;
+                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target));
                 }
             }
             if (Config.Item("Riven.UseRCombo").GetValue<bool>())
@@ -1906,6 +1907,7 @@ namespace EloFactory_Riven
                 if (R.IsReady() || Player.HasBuff("RivenWindScarReady"))
                 {
                     damage += R.GetDamage(target);
+                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target));
                 }
             }
 
@@ -2425,10 +2427,10 @@ namespace EloFactory_Riven
                 {
                     if (FlashSlot.IsReady() && E.IsReady() && W.IsReady())
                     {
+                        lastCastFlashCombo = Utils.GameTimeTickCount;
                         E.Cast(target.ServerPosition, true);
                         Utility.DelayAction.Add(10 + Game.Ping / 2, () => R.Cast(target.ServerPosition));
                         Utility.DelayAction.Add(250 + Game.Ping / 2, () => Player.Spellbook.CastSpell(FlashSlot, target.ServerPosition));
- 
                     }
                 }
             }
@@ -2447,10 +2449,10 @@ namespace EloFactory_Riven
                 {
                     if (FlashSlot.IsReady() && E.IsReady() && W.IsReady())
                     {
+                        lastCastFlashCombo = Utils.GameTimeTickCount;
                         E.Cast(target.ServerPosition, true);
                         Utility.DelayAction.Add(10 + Game.Ping / 2, () => R.Cast(target.ServerPosition));
                         Utility.DelayAction.Add(250 + Game.Ping / 2, () => Player.Spellbook.CastSpell(FlashSlot, target.ServerPosition));
-
                     }
                 }
             }
