@@ -27,6 +27,7 @@ namespace EloFactory_Riven
         public static Spell E;
         public static Spell R;
         public static Spell Ignite = new Spell(SpellSlot.Unknown, 600);
+        public static SpellSlot FlashSlot;
 
         public static Items.Item HealthPotion = new Items.Item(2003, 0);
         public static Items.Item ManaPotion = new Items.Item(2004, 0);
@@ -36,9 +37,6 @@ namespace EloFactory_Riven
         public static Menu Config;
 
         private static Obj_AI_Hero Player;
-
-        public static int[] abilitySequence;
-        public static int qOff = 0, wOff = 0, eOff = 0, rOff = 0;
 
         public static Items.Item YoumuusGhostblade = new Items.Item(3142, 0);
         public static Items.Item BilgewaterCutlass = new Items.Item(3144, 450);
@@ -156,12 +154,12 @@ namespace EloFactory_Riven
             if (ignite != null)
                 Ignite.Slot = ignite.Slot;
 
+            FlashSlot = Player.GetSpellSlot("summonerflash");
+
             SpellList.Add(Q);
             SpellList.Add(W);
             SpellList.Add(E);
             SpellList.Add(R);
-
-            abilitySequence = new int[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
 
             #region Menu
             Config = new Menu(ChampionName + " By LuNi", ChampionName + " By LuNi", true);
@@ -233,6 +231,12 @@ namespace EloFactory_Riven
             Config.SubMenu("Combo").SubMenu("R In Combo").SubMenu("R2 In Combo").AddItem(new MenuItem("Riven.UseR2Combo", "Use R2 in Combo")).SetValue(true);
             Config.SubMenu("Combo").SubMenu("R In Combo").SubMenu("R2 In Combo").AddItem(new MenuItem("Riven.R2Mode", "R2 Mode")).SetValue(new StringList(new[] { "Kill Only", "Kill Or Maximum Damage" }, 1));
             Config.SubMenu("Combo").SubMenu("R In Combo").SubMenu("R2 In Combo").AddItem(new MenuItem("Riven.MiniCountR2", "Minimum Enemy Hit For Auto R2")).SetValue(new Slider(3, 2, 5));
+            Config.SubMenu("Combo").AddSubMenu(new Menu("Flash In Combo", "Flash In Combo"));
+            Config.SubMenu("Combo").SubMenu("Flash In Combo").AddSubMenu(new Menu("Flash 1v1", "Flash 1v1"));
+            Config.SubMenu("Combo").SubMenu("Flash In Combo").SubMenu("Flash 1v1").AddItem(new MenuItem("Riven.UseFlashCombo1v1", "Use Flash In Combo 1V1").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("Flash In Combo").AddSubMenu(new Menu("Flash TeamFight", "Flash TeamFight"));
+            Config.SubMenu("Combo").SubMenu("Flash In Combo").SubMenu("Flash TeamFight").AddItem(new MenuItem("Riven.UseFlashComboTF", "Use Flash In Combo In TeamFight").SetValue(true));
+            Config.SubMenu("Combo").SubMenu("Flash In Combo").SubMenu("Flash TeamFight").AddItem(new MenuItem("Riven.EnemyCountFlashComboTF", "Minimum Enemy To Flash In Combo In TeamFight")).SetValue(new Slider(2, 1, 5));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddSubMenu(new Menu("Harass When Enemy Initiate Or Poke On Me", "Harass When Enemy Initiate Or Poke On Me"));
@@ -265,7 +269,7 @@ namespace EloFactory_Riven
             Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseYoumuuFleeMode", "Use Youmuu In Flee Mode").SetValue(true));
             Config.SubMenu("Flee").AddItem(new MenuItem("Riven.UseYoumuuFleeModeEnemyCount", "Minimum Enemy Around To Use Youmuu's Ghostblade In Flee Mode")).SetValue(new Slider(1, 0, 5));
             Config.SubMenu("Flee").AddItem(new MenuItem("Riven.FleeActive", "Flee!").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Press)));
-            
+
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseQLaneClear", "Use Q in LaneClear").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.QLaneClearCount", "Minimum Minion To Use Q In LaneClear").SetValue(new Slider(3, 1, 6)));
@@ -295,8 +299,27 @@ namespace EloFactory_Riven
             Config.SubMenu("Misc").SubMenu("Interrupt Settings").AddItem(new MenuItem("Riven.LockMovementInterrupt", "Lock Movement On Enemy To Interrupt").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("Riven.AutoWEGC", "Auto W On Gapclosers").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("Riven.AutoPotion", "Use Auto Potion").SetValue(true));
-            Config.SubMenu("Misc").AddItem(new MenuItem("Riven.AutoLevelSpell", "Auto Level Spell").SetValue(true));
-
+            Config.SubMenu("Misc").AddSubMenu(new Menu("Auto Level Spell", "Auto Level Spell"));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").AddItem(new MenuItem("Riven.AutoLevelSpell", "Auto Level Spell").SetValue(false));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").AddSubMenu(new Menu("Advanced Settings", "Advanced Settings"));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV1", "Spell choice Lv. 1").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 3)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV2", "Spell choice Lv. 2").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 3)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV3", "Spell choice Lv. 3").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 3)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV4", "Spell choice Lv. 4").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV5", "Spell choice Lv. 5").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV6", "Spell choice Lv. 6").SetValue(new StringList(new[] { "R", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV7", "Spell choice Lv. 7").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV8", "Spell choice Lv. 8").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 2)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV9", "Spell choice Lv. 9").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV10", "Spell choice Lv. 10").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 2)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV11", "Spell choice Lv. 11").SetValue(new StringList(new[] { "R", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV12", "Spell choice Lv. 12").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 2)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV13", "Spell choice Lv. 13").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 2)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV14", "Spell choice Lv. 14").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 1)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV15", "Spell choice Lv. 15").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 1)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV16", "Spell choice Lv. 16").SetValue(new StringList(new[] { "R", "No Spell" }, 0)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV17", "Spell choice Lv. 17").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 1)));
+            Config.SubMenu("Misc").SubMenu("Auto Level Spell").SubMenu("Advanced Settings").AddItem(new MenuItem("Riven.SpellLV18", "Spell choice Lv. 18").SetValue(new StringList(new[] { "Q", "W", "E", "No Spell" }, 1)));
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q range").SetValue(new Circle(true, Color.Indigo)));
             Config.SubMenu("Drawings").AddItem(new MenuItem("WRange", "W range").SetValue(new Circle(true, Color.Green)));
@@ -742,8 +765,31 @@ namespace EloFactory_Riven
                 }
             }
 
+            if (W.IsReady() && CanCastW && Config.Item("Riven.UseWCombo").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range + 25)
+            {
+                if (Config.Item("Riven.UseWCombo").GetValue<bool>() && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                {
+                    ItemsActivator();
+                    W.Cast(true);
+                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady"))
+                    {
+                        RLogic();
+                    }
+                }
+            }
+
             AutoItemsActivator();
 
+            if (Config.Item("Riven.UseFlashCombo1v1").GetValue<bool>())
+            {
+                FlashComboLogic1v1();
+            }
+
+            if (Config.Item("Riven.UseFlashComboTF").GetValue<bool>())
+            {
+                FlashComboLogicTF();
+            }
+            
             if (E.IsReady() && CanCastE && Config.Item("Riven.UseECombo").GetValue<bool>() && target.Distance(Player.ServerPosition) > Player.AttackRange)
             {
                 if (Config.Item("Riven.UseECombo").GetValue<bool>() && target.Distance(Player) > Q.Range)
@@ -756,19 +802,6 @@ namespace EloFactory_Riven
                             RLogic();
                         }
                         ItemsActivator();
-                    }
-                }
-            }
-
-            if (W.IsReady() && CanCastW && Config.Item("Riven.UseWCombo").GetValue<bool>() && target.Distance(Player.ServerPosition) <= W.Range + 25)
-            {
-                if (Config.Item("Riven.UseWCombo").GetValue<bool>() && !target.HasBuff("Black Shield") && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
-                {
-                    ItemsActivator();
-                    W.Cast(true);
-                    if (R.IsReady() && !Player.HasBuff("RivenWindScarReady"))
-                    {
-                        RLogic();
                     }
                 }
             }
@@ -1321,23 +1354,430 @@ namespace EloFactory_Riven
         #region Up Spell
         private static void LevelUpSpells()
         {
-            int qL = Player.Spellbook.GetSpell(SpellSlot.Q).Level + qOff;
-            int wL = Player.Spellbook.GetSpell(SpellSlot.W).Level + wOff;
-            int eL = Player.Spellbook.GetSpell(SpellSlot.E).Level + eOff;
-            int rL = Player.Spellbook.GetSpell(SpellSlot.R).Level + rOff;
+            int qL = Player.Spellbook.GetSpell(SpellSlot.Q).Level;
+            int wL = Player.Spellbook.GetSpell(SpellSlot.W).Level;
+            int eL = Player.Spellbook.GetSpell(SpellSlot.E).Level;
+            int rL = Player.Spellbook.GetSpell(SpellSlot.R).Level;
+
             if (qL + wL + eL + rL < ObjectManager.Player.Level)
             {
-                int[] level = new int[] { 0, 0, 0, 0 };
-                for (int i = 0; i < ObjectManager.Player.Level; i++)
+                if (qL + wL + eL + rL == 0)
                 {
-                    level[abilitySequence[i] - 1] = level[abilitySequence[i] - 1] + 1;
-                }
-                if (qL < level[0]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
-                if (wL < level[1]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
-                if (eL < level[2]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
-                if (rL < level[3]) ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
+                    switch (Config.Item("Riven.SpellLV1").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
 
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 1)
+                {
+                    switch (Config.Item("Riven.SpellLV2").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 2)
+                {
+                    switch (Config.Item("Riven.SpellLV3").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 3)
+                {
+                    switch (Config.Item("Riven.SpellLV4").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 4)
+                {
+                    switch (Config.Item("Riven.SpellLV5").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 5)
+                {
+                    switch (Config.Item("Riven.SpellLV6").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 6)
+                {
+                    switch (Config.Item("Riven.SpellLV7").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 7)
+                {
+                    switch (Config.Item("Riven.SpellLV8").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 8)
+                {
+                    switch (Config.Item("Riven.SpellLV9").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 9)
+                {
+                    switch (Config.Item("Riven.SpellLV10").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 10)
+                {
+                    switch (Config.Item("Riven.SpellLV11").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 11)
+                {
+                    switch (Config.Item("Riven.SpellLV12").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 12)
+                {
+                    switch (Config.Item("Riven.SpellLV13").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 13)
+                {
+                    switch (Config.Item("Riven.SpellLV14").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 14)
+                {
+                    switch (Config.Item("Riven.SpellLV15").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 15)
+                {
+                    switch (Config.Item("Riven.SpellLV16").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 16)
+                {
+                    switch (Config.Item("Riven.SpellLV17").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
+
+                if (qL + wL + eL + rL == 17)
+                {
+                    switch (Config.Item("Riven.SpellLV18").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 0:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.Q);
+                                break;
+                            }
+
+                        case 1:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.W);
+                                break;
+                            }
+
+                        case 2:
+                            {
+                                ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.E);
+                                break;
+                            }
+                    }
+                    return;
+                }
             }
+            
+
+            
         }
         #endregion
 
@@ -1441,6 +1881,41 @@ namespace EloFactory_Riven
             return damage;
         }
 
+
+        public static float getFlashComboDamage(Obj_AI_Hero target)
+        {
+            float damage = 0f;
+            if (Config.Item("Riven.UseQCombo").GetValue<bool>())
+            {
+                if (Q.IsReady())
+                {
+                    damage += Q.GetDamage(target);
+                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target)) * 1.5f;
+                }
+            }
+            if (Config.Item("Riven.UseWCombo").GetValue<bool>())
+            {
+                if (W.IsReady())
+                {
+                    damage += W.GetDamage(target);
+                    damage += (Player.TotalAttackDamage * PassiveDamageCheck() + (float)Player.GetAutoAttackDamage(target)) * 1.5f;
+                }
+            }
+            if (Config.Item("Riven.UseRCombo").GetValue<bool>())
+            {
+                if (R.IsReady() || Player.HasBuff("RivenWindScarReady"))
+                {
+                    damage += R.GetDamage(target);
+                }
+            }
+
+            if (Ignite.Slot != SpellSlot.Unknown)
+            {
+                damage += (float)Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+            }
+
+            return damage;
+        }
 
         public static float getComboDamageNoUlt(Obj_AI_Hero target)
         {
@@ -1692,7 +2167,7 @@ namespace EloFactory_Riven
 
         #endregion
 
-        #region OnNewPatch
+        #region OnNewPath
         private static void Obj_AI_Base_OnNewPath(Obj_AI_Base sender, GameObjectNewPathEventArgs args)
         {
             if (sender.IsMe && !args.IsDash)
@@ -1712,31 +2187,27 @@ namespace EloFactory_Riven
         {
             var target = TargetSelector.GetTarget(ComboRange(), TargetSelector.DamageType.Physical);
 
-            if (Player.CountEnemiesInRange(1300) == 1)
+            if (getComboDamage(target) - (Q.GetDamage(target) * 2) > target.Health && !Player.HasBuff("RivenTriCleaveBuff"))
             {
-                if (getComboDamage(target) - (Q.GetDamage(target) * 2) > target.Health && !Player.HasBuff("RivenTriCleaveBuff"))
+                if (Player.Distance(target) <= (180 * 2) + Q.Range && Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 3)
                 {
-                    if (Player.Distance(target) <= (180 * 2) + Q.Range && Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 3)
-                    {
-                        Q.Cast(target.ServerPosition, true);
-                    }
-
-                    if (Player.Distance(target) <= ((180 * 2) + Player.AttackRange) && (Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 3 || Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 2))
-                    {
-                        Q.Cast(target.ServerPosition, true);
-                    }
+                    Q.Cast(target.ServerPosition, true);
                 }
 
-                if (getComboDamage(target) - (Q.GetDamage(target) * 1) > target.Health)
+                if (Player.Distance(target) <= ((180 * 2) + Player.AttackRange) && (Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 3 || Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 2))
                 {
-                    if (Player.Distance(target) <= (180 + Player.AttackRange) && Player.GetBuffCount("RivenTriCleaveBuff") != 2)
-                    {
-                        Q.Cast(target.ServerPosition, true);
-                    }
+                    Q.Cast(target.ServerPosition, true);
                 }
             }
 
-
+            if (getComboDamage(target) - (Q.GetDamage(target) * 1) > target.Health)
+            {
+                if (Player.Distance(target) <= (180 + Player.AttackRange) && Player.GetBuffCount("RivenTriCleaveBuff") != 2)
+                {
+                    Q.Cast(target.ServerPosition, true);
+                }
+            }
+           
         }
         #endregion
 
@@ -1914,7 +2385,7 @@ namespace EloFactory_Riven
                         return;
                     }
 
-                    if (Player.HasBuff("RivenWindScarReady") && R.GetDamage(targets) > targets.Health && targets.Distance(Player) < R.Range && !target.HasBuff("Spell Shield") && !target.HasBuff("BansheesVeil"))
+                    if (Player.HasBuff("RivenWindScarReady") && R.GetDamage(targets) > targets.Health && targets.Distance(Player) < R.Range && !target.HasBuff("BansheesVeil"))
                     {
                         R.CastIfHitchanceEquals(targets, HitChance.VeryHigh, true);
                     }
@@ -1938,6 +2409,50 @@ namespace EloFactory_Riven
                     }
                 }
 
+            }
+        }
+        #endregion
+
+        #region FlashComboLogic1v1
+        public static void FlashComboLogic1v1()
+        {
+            var target = TargetSelector.GetTarget(E.Range + 425 + W.Range, TargetSelector.DamageType.Physical);
+
+
+            if (Player.CountEnemiesInRange(1300) == 1)
+            {
+                if (target.IsValidTarget() && Player.Distance(target) > E.Range + Q.Range && getFlashComboDamage(target) > target.Health)
+                {
+                    if (FlashSlot.IsReady() && E.IsReady() && W.IsReady())
+                    {
+                        E.Cast(target.ServerPosition, true);
+                        Utility.DelayAction.Add(10 + Game.Ping / 2, () => R.Cast(target.ServerPosition));
+                        Utility.DelayAction.Add(250 + Game.Ping / 2, () => Player.Spellbook.CastSpell(FlashSlot, target.ServerPosition));
+ 
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region FlashComboLogicTF
+        public static void FlashComboLogicTF()
+        {
+            var target = TargetSelector.GetTarget(E.Range + 425 + W.Range, TargetSelector.DamageType.Physical);
+
+
+            if (Player.CountEnemiesInRange(1300) > 1)
+            {
+                if (target.IsValidTarget() && Player.Distance(target) > E.Range + Q.Range && getFlashComboDamage(target) > target.Health && target.CountAlliesInRange(W.Range - 10) >= Config.Item("Riven.EnemyCountFlashComboTF").GetValue<Slider>().Value - 1)
+                {
+                    if (FlashSlot.IsReady() && E.IsReady() && W.IsReady())
+                    {
+                        E.Cast(target.ServerPosition, true);
+                        Utility.DelayAction.Add(10 + Game.Ping / 2, () => R.Cast(target.ServerPosition));
+                        Utility.DelayAction.Add(250 + Game.Ping / 2, () => Player.Spellbook.CastSpell(FlashSlot, target.ServerPosition));
+
+                    }
+                }
             }
         }
         #endregion
