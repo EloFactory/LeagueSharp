@@ -248,7 +248,10 @@ namespace EloFactory_Cassiopeia
         public static void Game_OnGameUpdate(EventArgs args)
         {
 
-            Player.SetSkin(Player.BaseSkinName, Config.Item("Cassiopeia.SkinChanger").GetValue<bool>() ? Config.Item("Cassiopeia.SkinChangerName").GetValue<StringList>().SelectedIndex : Player.BaseSkinId);
+            if (Config.Item("Cassiopeia.SkinChanger").GetValue<bool>())
+            {
+                Player.SetSkin(Player.BaseSkinName, Config.Item("Cassiopeia.SkinChangerName").GetValue<StringList>().SelectedIndex);
+            }
 
             if (Config.Item("Cassiopeia.AutoLevelSpell").GetValue<bool>()) LevelUpSpells();
 
