@@ -23,6 +23,7 @@ namespace EloFactory_Riven
         public static List<Spell> SpellList = new List<Spell>();
 
         public static Spell Q;
+        public static Spell Qfarm;
         public static Spell W;
         public static Spell E;
         public static Spell R;
@@ -78,15 +79,7 @@ namespace EloFactory_Riven
             {
                 float range = 0f;
 
-                if (Q.IsReady() && !Player.HasBuff("RivenTriCleaveBuff"))
-                {
-                    range += 180f * 2 + Q.Range;
-                }
-                if (Q.IsReady() && Player.GetBuffCount("RivenTriCleaveBuff") == 1)
-                {
-                    range += 180f + Q.Range;
-                }
-                if (Q.IsReady() && Player.GetBuffCount("RivenTriCleaveBuff") == 2)
+                if (Q.IsReady())
                 {
                     range += Q.Range;
                 }
@@ -144,11 +137,13 @@ namespace EloFactory_Riven
             if (Player.ChampionName != ChampionName) return;
 
             Q = new Spell(SpellSlot.Q, getQRange());
+            Qfarm = new Spell(SpellSlot.Q, getQRange());
             W = new Spell(SpellSlot.W, 250f);
             E = new Spell(SpellSlot.E, 270f);
             R = new Spell(SpellSlot.R, 1100f);
 
             Q.SetSkillshot(0.25f, 100f, 2200f, false, SkillshotType.SkillshotCircle);
+            Qfarm.SetSkillshot(0.25f, 100f, 2200f, false, SkillshotType.SkillshotLine);
             R.SetSkillshot(0.25f, 225f, 1600f, false, SkillshotType.SkillshotCone);
 
             var ignite = Player.Spellbook.Spells.FirstOrDefault(spell => spell.Name == "summonerdot");
@@ -273,12 +268,12 @@ namespace EloFactory_Riven
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseQLaneClear", "Use Q in LaneClear").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.QLaneClearCount", "Minimum Minion To Use Q In LaneClear").SetValue(new Slider(3, 1, 6)));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.QLaneClearCount1", "Minimum Minion To Use Q In LaneClear").SetValue(new Slider(2, 1, 6)));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseWLaneClear", "Use W in LaneClear").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.WLaneClearCount", "Minimum Minion To Use W In LaneClear").SetValue(new Slider(3, 1, 6)));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.WLaneClearCount1", "Minimum Minion To Use W In LaneClear").SetValue(new Slider(3, 1, 6)));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseELaneClear", "Use E in LaneClear").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.UseTiamatHydraLaneClear", "Use Tiamat / Hydra In LaneClear").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.TiamatHydraLaneClearCount", "Minimum Minion To Use Tiamat / Hydra In LaneClear").SetValue(new Slider(3, 1, 6)));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.TiamatHydraLaneClearCount1", "Minimum Minion To Use Tiamat / Hydra In LaneClear").SetValue(new Slider(2, 1, 6)));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.LockMovementLaneClear", "Lock Movement On WayPoint In LaneClear").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("Riven.SafeLaneClear", "Dont Use Spell In LaneClear If Enemy in Dangerous Range").SetValue(true));
 
@@ -597,8 +592,105 @@ namespace EloFactory_Riven
 
                 if (!MinionN.IsValidTarget() || MinionN == null)
                 {
-                    LaneClear();
-                    return;
+                    var useQLC = Config.Item("Riven.UseQLaneClear").GetValue<bool>();
+                    var useWLC = Config.Item("Riven.UseWLaneClear").GetValue<bool>();
+                    var useELC = Config.Item("Riven.UseELaneClear").GetValue<bool>();
+                    var useItemsLC = Config.Item("Riven.UseTiamatHydraLaneClear").GetValue<bool>();
+
+                    var CountQ = Config.Item("Riven.QLaneClearCount").GetValue<Slider>().Value;
+                    var CountW = Config.Item("Riven.WLaneClearCount").GetValue<Slider>().Value;
+                    var CountItems = Config.Item("Riven.TiamatHydraLaneClearCount").GetValue<Slider>().Value;
+
+                    if (Config.Item("Riven.SafeLaneClear").GetValue<bool>() && Player.CountEnemiesInRange(1500) > 0) return;
+
+                    if (CanUseAA && CanMove)
+                    {
+                        var MinionE = MinionManager.GetMinions(Player.AttackRange + Player.Distance(Player.BBox.Minimum) + 50, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health).FirstOrDefault();
+                        if (!(CastedQ || CastedW || CastedE || UsedAA))
+                        {
+                            CanCastQ = false;
+                            Player.IssueOrder(GameObjectOrder.AttackUnit, MinionE);
+                        }
+                    }
+
+                    if (useItemsLC)
+                    {
+                        var allMinionsEItems = MinionManager.GetMinions(Player.Position, E.Range + RavenousHydra.Range, MinionTypes.All, MinionTeam.Enemy);
+                        var allMinionsItems = MinionManager.GetMinions(Player.Position, RavenousHydra.Range, MinionTypes.All, MinionTeam.Enemy);
+
+                        if (allMinionsItems.Any() && UsedAA)
+                        {
+                            var farmAll = W.GetCircularFarmLocation(allMinionsItems, RavenousHydra.Range);
+
+                            if (farmAll.MinionsHit >= CountItems)
+                            {
+                                if (Tiamat.IsReady())
+                                {
+                                    Tiamat.Cast();
+                                }
+
+                                if (RavenousHydra.IsReady())
+                                {
+                                    RavenousHydra.Cast();
+                                }
+                            }
+
+                        }
+                        else if (allMinionsEItems.Any() && useELC && E.IsReady())
+                        {
+                            var farmAll = W.GetCircularFarmLocation(allMinionsEItems, RavenousHydra.Range);
+
+                            if (farmAll.MinionsHit >= CountItems && farmAll.Position.Distance(Player) > Player.AttackRange)
+                            {
+                                E.Cast(farmAll.Position, true);
+                            }
+                        }
+                    }
+
+                    if (useQLC && Q.IsReady())
+                    {
+                        var allMinionsEQ = MinionManager.GetMinions(Player.Position, Qfarm.Range + E.Range, MinionTypes.All, MinionTeam.Enemy);
+                        var allMinionsQ = MinionManager.GetMinions(Player.Position, Qfarm.Range, MinionTypes.All, MinionTeam.Enemy);
+
+                        if (allMinionsQ.Any() && CanCastQ)
+                        {
+                            var farmAll = Qfarm.GetLineFarmLocation(allMinionsQ, Qfarm.Width);
+                            if (farmAll.MinionsHit >= CountQ)
+                            {
+                                Q.Cast(farmAll.Position, true);
+                            }
+                        }
+                        else if (allMinionsEQ.Any() && useELC && E.IsReady())
+                        {
+                            var farmAll = Qfarm.GetLineFarmLocation(allMinionsEQ, Qfarm.Width);
+                            if (farmAll.MinionsHit >= CountQ && farmAll.Position.Distance(Player) > Player.AttackRange)
+                            {
+                                E.Cast(farmAll.Position, true);
+                            }
+                        }
+                    }
+
+                    if (useWLC && W.IsReady())
+                    {
+                        var allMinionsEW = MinionManager.GetMinions(Player.Position, W.Range + E.Range, MinionTypes.All, MinionTeam.Enemy);
+                        var allMinionsW = MinionManager.GetMinions(Player.Position, W.Range, MinionTypes.All, MinionTeam.Enemy);
+                        if (allMinionsW.Any() && CanCastW)
+                        {
+                            var farmAll = W.GetCircularFarmLocation(allMinionsW, W.Range);
+                            if (farmAll.MinionsHit >= CountW)
+                            {
+                                W.Cast(farmAll.Position, true);
+                            }
+                        }
+                        else if (allMinionsEW.Any() && useELC && E.IsReady())
+                        {
+                            var farmAll = W.GetCircularFarmLocation(allMinionsEW, W.Range);
+                            if (farmAll.MinionsHit >= CountW && farmAll.Position.Distance(Player) > Player.AttackRange)
+                            {
+                                E.Cast(farmAll.Position, true);
+                            }
+                        }
+                    }
                 }
 
                 if (MinionN.IsValidTarget())
@@ -825,18 +917,7 @@ namespace EloFactory_Riven
             {
                 if (Config.Item("Riven.GapCloseQ").GetValue<bool>())
                 {
-                    if (!E.IsReady() && Utils.GameTimeTickCount - lastCastQ >= Config.Item("Riven.GapCloserDelay").GetValue<Slider>().Value * 10 && !UsedAA)
-                    {
-                        if (Q.IsReady() && Utils.GameTimeTickCount - lastCastE >= 700)
-                        {
-                            if (R.IsReady() && !Player.HasBuff("RivenWindScarReady"))
-                            {
-                                RLogic();
-                            }
-
-                            QGapCloseLogic();
-                        }
-                    }
+                    QGapCloseLogic();
                 }
             }
         }
@@ -992,131 +1073,6 @@ namespace EloFactory_Riven
                     }
                 }
             }
-        }
-        #endregion
-
-        #region LaneClear
-        public static void LaneClear()
-        {
-
-            var useQ = Config.Item("Riven.UseQLaneClear").GetValue<bool>();
-            var useW = Config.Item("Riven.UseWLaneClear").GetValue<bool>();
-            var useE = Config.Item("Riven.UseELaneClear").GetValue<bool>();
-            var useItems = Config.Item("Riven.UseTiamatHydraLaneClear").GetValue<bool>();
-
-            var CountQ = Config.Item("Riven.QLaneClearCount").GetValue<Slider>().Value;
-            var CountW = Config.Item("Riven.WLaneClearCount").GetValue<Slider>().Value;
-            var CountItems = Config.Item("Riven.TiamatHydraLaneClearCount").GetValue<Slider>().Value;
-
-            if (Config.Item("Riven.SafeLaneClear").GetValue<bool>() && Player.CountEnemiesInRange(1500) > 0) return;
-
-            var Minion = MinionManager.GetMinions(600, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth).FirstOrDefault();
-
-            if (CanCastQ && Q.IsReady() && useQ)
-            {
-                var allMinionsQ = MinionManager.GetMinions(Player.Position, Q.Range + LaneClearERange() + LaneClearExtendedRange(), MinionTypes.All, MinionTeam.Enemy);
-
-                if (allMinionsQ.Any())
-                {
-                    var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width);
-
-                    if (farmAll.MinionsHit >= CountQ)
-                    {
-                        if (Player.Distance(farmAll.Position) > 0)
-                        {
-                            if (useE && E.IsReady())
-                            {
-                                E.Cast(farmAll.Position, true);
-                                if (Config.Item("Riven.LockMovementLaneClear").GetValue<bool>())
-                                {
-                                    Player.IssueOrder(GameObjectOrder.MoveTo, farmAll.Position.To3D());
-                                }
-                            }
-                        }
-                        Q.Cast(farmAll.Position, true);
-                    }
-                }
-            }
-
-            if (useItems)
-            {
-                var allMinionsQ = MinionManager.GetMinions(Player.Position, LaneClearQRange() + LaneClearERange() + RavenousHydra.Range + LaneClearExtendedRange(), MinionTypes.All, MinionTeam.Enemy);
-
-                if (allMinionsQ.Any())
-                {
-                    var farmAll = W.GetCircularFarmLocation(allMinionsQ, RavenousHydra.Range);
-                    if (farmAll.MinionsHit >= CountItems)
-                    {
-                        if (Player.Distance(farmAll.Position) > 0)
-                        {
-                            if (useE && E.IsReady())
-                            {
-                                E.Cast(farmAll.Position, true);
-                                if (Config.Item("Riven.LockMovementLaneClear").GetValue<bool>())
-                                {
-                                    Player.IssueOrder(GameObjectOrder.MoveTo, farmAll.Position.To3D());
-                                }
-                            }
-
-                            if (useQ && Q.IsReady())
-                            {
-                                Q.Cast(farmAll.Position, true);
-                                if (Config.Item("Riven.LockMovementLaneClear").GetValue<bool>())
-                                {
-                                    Player.IssueOrder(GameObjectOrder.MoveTo, farmAll.Position.To3D());
-                                }
-                            }
-                        }
-
-                        if (Tiamat.IsReady())
-                        {
-                            Tiamat.Cast();
-                        }
-
-                        if (RavenousHydra.IsReady())
-                        {
-                            RavenousHydra.Cast();
-                        }
-                    }
-                }
-            }
-
-            if (W.IsReady() && useW)
-            {
-                var allMinionsQ = MinionManager.GetMinions(Player.Position, LaneClearQRange() + LaneClearERange() + W.Range + 25 + LaneClearExtendedRange(), MinionTypes.All, MinionTeam.Enemy);
-
-                if (allMinionsQ.Any())
-                {
-                    var farmAll = W.GetCircularFarmLocation(allMinionsQ, W.Range + 25);
-                    if (farmAll.MinionsHit >= CountW)
-                    {
-                        if (Player.Distance(farmAll.Position) > 0)
-                        {
-
-                            if (useE && E.IsReady())
-                            {
-                                E.Cast(farmAll.Position, true);
-                                if (Config.Item("Riven.LockMovementLaneClear").GetValue<bool>())
-                                {
-                                    Player.IssueOrder(GameObjectOrder.MoveTo, farmAll.Position.To3D());
-                                }
-                            }
-
-                            if (useQ && Q.IsReady())
-                            {
-                                Q.Cast(farmAll.Position, true);
-                                if (Config.Item("Riven.LockMovementLaneClear").GetValue<bool>())
-                                {
-                                    Player.IssueOrder(GameObjectOrder.MoveTo, farmAll.Position.To3D());
-                                }
-                            }
-                        }
-                        W.Cast(true);
-                    }
-                }
-            }
-
-
         }
         #endregion
 
@@ -2189,24 +2145,22 @@ namespace EloFactory_Riven
         {
             var target = TargetSelector.GetTarget(ComboRange(), TargetSelector.DamageType.Physical);
 
-            if (getComboDamage(target) - (Q.GetDamage(target) * 2) > target.Health && !Player.HasBuff("RivenTriCleaveBuff"))
+            if (target.Distance(Player.ServerPosition) > Player.AttackRange + Player.Distance(Player.BBox.Minimum) + 100)
             {
-                if (Player.Distance(target) <= (180 * 2) + Q.Range && Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 3)
+                if (getComboDamage(target) > target.Health)
                 {
-                    Q.Cast(target.ServerPosition, true);
-                }
+                    if (!E.IsReady() && Utils.GameTimeTickCount - lastCastQ >= Config.Item("Riven.GapCloserDelay").GetValue<Slider>().Value * 10 && !UsedAA)
+                    {
+                        if (Q.IsReady() && Utils.GameTimeTickCount - lastCastE >= 700)
+                        {
+                            if (R.IsReady() && !Player.HasBuff("RivenWindScarReady"))
+                            {
+                                RLogic();
+                            }
 
-                if (Player.Distance(target) <= ((180 * 2) + Player.AttackRange) && (Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 3 || Config.Item("Riven.GapCloseQCount").GetValue<Slider>().Value == 2))
-                {
-                    Q.Cast(target.ServerPosition, true);
-                }
-            }
-
-            if (getComboDamage(target) - (Q.GetDamage(target) * 1) > target.Health)
-            {
-                if (Player.Distance(target) <= (180 + Player.AttackRange) && Player.GetBuffCount("RivenTriCleaveBuff") != 2)
-                {
-                    Q.Cast(target.ServerPosition, true);
+                            Q.Cast(target.ServerPosition);
+                        }
+                    }
                 }
             }
            
