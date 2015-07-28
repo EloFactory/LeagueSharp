@@ -257,7 +257,7 @@ namespace EloFactory_Ekko
 
             }
 
-            if (Config.Item("Ekko.AutoR").GetValue<bool>() && R.IsReady())
+            if (Config.Item("Ekko.RAuto").GetValue<bool>() && R.IsReady())
             {
                 if (Config.Item("Ekko.UseSafeRComboAuto").GetValue<bool>() && Player.HealthPercent <= Config.Item("Ekko.MinimumHPSafeRAuto").GetValue<Slider>().Value)
                 {
